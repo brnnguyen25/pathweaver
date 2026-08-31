@@ -1,12 +1,13 @@
 import express from "express";
-import nodesRoutes from "./routes/nodesRoutes";
 import cors from "cors";
+import nodesRoutes from "./routes/nodesRoutes";
 import edgesRoutes from "./routes/edgesRoutes";
+import validationRoutes from "./routes/validationRoutes";
 
 const app = express();
 app.use(cors());
 app.use("/api/edges", edgesRoutes);
-
+app.use("/api/validate", validationRoutes);
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());

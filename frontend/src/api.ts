@@ -31,3 +31,20 @@ export async function fetchEdges(): Promise<ApiEdge[]> {
   }
   return response.json();
 }
+
+export interface ValidationReport {
+  totalNodes: number;
+  totalEdges: number;
+  orphanedNodes: { id: string; label: string }[];
+  deadEndNodes: { id: string; label: string }[];
+  cycles: { id: string; label: string }[][];
+  isValid: boolean;
+}
+
+export async function runValidation(): Promise<ValidationReport> {
+  const response = await fetch(`${API_BASE_URL}/validate`);
+  if (!response.ok) {
+    throw new Error(`Failed to run validation: ${response.status}`);
+  }
+  return response.json();
+}

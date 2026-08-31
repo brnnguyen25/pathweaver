@@ -7,7 +7,13 @@ import ReactFlow, {
   type Node,
   type Edge,
 } from "reactflow";
-import { fetchNodes, fetchEdges, type ApiEdge } from "./api";
+import {
+  fetchNodes,
+  fetchEdges,
+  runValidation,
+  type ApiEdge,
+  type ValidationReport,
+} from "./api";
 
 type NodeStatus =
   | "completed"
@@ -63,15 +69,14 @@ function App() {
   const [completedNodeIds, setCompletedNodeIds] = useState<Set<string>>(
     new Set(),
   );
+  const [validationReport, setValidationReport] =
+    useState<ValidationReport | null>(null);
   const [rawEdges, setRawEdges] = useState<ApiEdge[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([fetchNodes(), fetchEdges()])
       .then(([apiNodes, apiEdges]) => {
-        // React Flow needs an x/y position per node.
-        // We don't have real layout logic yet (that's a later module) —
-        // for now, space them out in a simple horizontal row so you can see them.
         const positionedNodes: Node[] = apiNodes.map((n, index) => ({
           id: n.id,
           data: { label: n.label },
@@ -132,6 +137,15 @@ function App() {
     });
   }
 
+  async function handleRunValidation() {
+    try {
+      const report = await runValidation();
+      setValidationReport(report);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   if (error) {
     return <div>Error loading graph: {error}</div>;
   }
@@ -165,6 +179,20 @@ function App() {
           >
             Reset Playtest
           </button>
+        )}
+        <button style={{ marginLeft: 12 }} onClick={handleRunValidation}>
+          Run Validation
+        </button>
+
+        {validationReport && (
+          <div style={{ marginTop: 8, fontSize: 14 }}>
+            <strong>
+              {validationReport.isValid ? "✅ Valid" : "❌ Issues found"}
+            </strong>
+            <div>Orphaned: {validationReport.orphanedNodes.length}</div>
+            <div>Dead ends: {validationReport.deadEndNodes.length}</div>
+            <div>Cycles: {validationReport.cycles.length}</div>
+          </div>
         )}
       </div>
 
