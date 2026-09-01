@@ -183,6 +183,22 @@ function App() {
         <button style={{ marginLeft: 12 }} onClick={handleRunValidation}>
           Run Validation
         </button>
+        <button
+          style={{ marginLeft: 12 }}
+          onClick={() =>
+            window.open("http://localhost:3001/api/export/json", "_blank")
+          }
+        >
+          Export JSON
+        </button>
+        <button
+          style={{ marginLeft: 12 }}
+          onClick={() =>
+            window.open("http://localhost:3001/api/export/xml", "_blank")
+          }
+        >
+          Export XML
+        </button>
 
         {validationReport && (
           <div style={{ marginTop: 8, fontSize: 14 }}>
