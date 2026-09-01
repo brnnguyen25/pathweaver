@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pathweaver_admin
+      POSTGRES_PASSWORD: penguin
+      POSTGRES_DB: pathweaver_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - pathweaver_pg_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DB_USER: pathweaver_admin
+      DB_PASSWORD: penguin
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: pathweaver_dev
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pathweaver_pg_data:
