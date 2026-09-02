@@ -1,4 +1,9 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
+import { AuthForm } from "./AuthForm";
+{
+  /* ADDED */
+}
 import ReactFlow, {
   Background,
   Controls,
@@ -73,6 +78,7 @@ function App() {
     useState<ValidationReport | null>(null);
   const [rawEdges, setRawEdges] = useState<ApiEdge[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     Promise.all([fetchNodes(), fetchEdges()])
@@ -146,6 +152,19 @@ function App() {
     }
   }
 
+  if (!user) {
+    {
+      /* ADDED */
+    }
+    return <AuthForm />;
+    {
+      /* ADDED */
+    }
+  }
+  {
+    /* ADDED */
+  }
+
   if (error) {
     return <div>Error loading graph: {error}</div>;
   }
@@ -199,7 +218,12 @@ function App() {
         >
           Export XML
         </button>
-
+        <button style={{ marginLeft: 12 }} onClick={logout}>
+          {" "}
+          {/* ADDED */}
+          Log Out ({user.email}) {/* ADDED */}
+        </button>{" "}
+        {/* ADDED */}
         {validationReport && (
           <div style={{ marginTop: 8, fontSize: 14 }}>
             <strong>
