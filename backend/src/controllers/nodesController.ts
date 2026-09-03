@@ -2,8 +2,12 @@ import { Request, Response } from "express";
 import { pool } from "../db";
 
 export async function getAllNodes(req: Request, res: Response) {
+  const { questlineId } = req.params;
   try {
-    const result = await pool.query("SELECT * FROM nodes ORDER BY created_at");
+    const result = await pool.query(
+      "SELECT * FROM nodes WHERE questline_id = $1 ORDER BY created_at",
+      [questlineId],
+    );
     res.json(result.rows);
   } catch (err) {
     console.error(err);

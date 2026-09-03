@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { AuthForm } from "./AuthForm";
-{
-  /* ADDED */
-}
+import { QuestlineList } from "./QuestlineList";
 import ReactFlow, {
   Background,
   Controls,
@@ -78,10 +76,18 @@ function App() {
     useState<ValidationReport | null>(null);
   const [rawEdges, setRawEdges] = useState<ApiEdge[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const { user, logout } = useAuth();
+  const [selectedQuestlineId, setSelectedQuestlineId] = useState<string | null>(
+    null,
+  );
+  const { user, token, logout } = useAuth();
 
   useEffect(() => {
-    Promise.all([fetchNodes(), fetchEdges()])
+    if (!token || !selectedQuestlineId) return;
+
+    Promise.all([
+      fetchNodes(token, selectedQuestlineId),
+      fetchEdges(token, selectedQuestlineId),
+    ])
       .then(([apiNodes, apiEdges]) => {
         const positionedNodes: Node[] = apiNodes.map((n, index) => ({
           id: n.id,
@@ -101,7 +107,7 @@ function App() {
         setRawEdges(apiEdges);
       })
       .catch((err) => setError(err.message));
-  }, []);
+  }, [token, selectedQuestlineId]);
 
   useEffect(() => {
     if (!playtestMode || rawEdges.length === 0) return;
@@ -144,8 +150,9 @@ function App() {
   }
 
   async function handleRunValidation() {
+    if (!token || !selectedQuestlineId) return;
     try {
-      const report = await runValidation();
+      const report = await runValidation(token, selectedQuestlineId);
       setValidationReport(report);
     } catch (err) {
       console.error(err);
@@ -153,16 +160,11 @@ function App() {
   }
 
   if (!user) {
-    {
-      /* ADDED */
-    }
     return <AuthForm />;
-    {
-      /* ADDED */
-    }
   }
-  {
-    /* ADDED */
+
+  if (!selectedQuestlineId) {
+    return <QuestlineList onSelect={setSelectedQuestlineId} />;
   }
 
   if (error) {
@@ -205,7 +207,10 @@ function App() {
         <button
           style={{ marginLeft: 12 }}
           onClick={() =>
-            window.open("http://localhost:3001/api/export/json", "_blank")
+            window.open(
+              `http://localhost:3001/api/questlines/${selectedQuestlineId}/export/json`,
+              "_blank",
+            )
           }
         >
           Export JSON
@@ -213,17 +218,24 @@ function App() {
         <button
           style={{ marginLeft: 12 }}
           onClick={() =>
-            window.open("http://localhost:3001/api/export/xml", "_blank")
+            window.open(
+              `http://localhost:3001/api/questlines/${selectedQuestlineId}/export/xml`,
+              "_blank",
+            )
           }
         >
           Export XML
         </button>
+        <button
+          style={{ marginLeft: 12 }}
+          onClick={() => setSelectedQuestlineId(null)}
+        >
+          Back to Questlines
+        </button>
         <button style={{ marginLeft: 12 }} onClick={logout}>
-          {" "}
-          {/* ADDED */}
-          Log Out ({user.email}) {/* ADDED */}
-        </button>{" "}
-        {/* ADDED */}
+          Log Out ({user.email})
+        </button>
+
         {validationReport && (
           <div style={{ marginTop: 8, fontSize: 14 }}>
             <strong>

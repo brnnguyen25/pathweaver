@@ -11,10 +11,12 @@ import {
 export async function runValidation(req: Request, res: Response) {
   try {
     const nodesResult = await pool.query<GraphNode>(
-      "SELECT id, label FROM nodes",
+      "SELECT id, label FROM nodes WHERE questline_id = $1",
+      [req.params.questlineId],
     );
     const edgesResult = await pool.query<GraphEdge>(
-      "SELECT from_node_id, to_node_id FROM edges",
+      "SELECT from_node_id, to_node_id FROM edges WHERE questline_id = $1",
+      [req.params.questlineId],
     );
 
     const nodes = nodesResult.rows;

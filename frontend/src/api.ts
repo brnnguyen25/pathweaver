@@ -24,6 +24,48 @@ export interface AuthResponse {
   user: AuthUser;
   token: string;
 }
+export interface Questline {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+function authHeaders(token: string) {
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function fetchQuestlines(token: string): Promise<Questline[]> {
+  const response = await fetch(`${API_BASE_URL}/questlines`, {
+    headers: authHeaders(token),
+  });
+  if (!response.ok) throw new Error("Failed to fetch questlines");
+  return response.json();
+}
+
+export async function createQuestline(
+  token: string,
+  name: string,
+): Promise<Questline> {
+  const response = await fetch(`${API_BASE_URL}/questlines`, {
+    method: "POST",
+    headers: { ...authHeaders(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!response.ok) throw new Error("Failed to create questline");
+  return response.json();
+}
+
+export async function deleteQuestline(
+  token: string,
+  questlineId: string,
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/questlines/${questlineId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+  if (!response.ok) throw new Error("Failed to delete questline");
+}
 
 export async function registerUser(
   email: string,
@@ -53,16 +95,28 @@ export async function loginUser(
   return data;
 }
 
-export async function fetchNodes(): Promise<ApiNode[]> {
-  const response = await fetch(`${API_BASE_URL}/nodes`);
+export async function fetchNodes(
+  token: string,
+  questlineId: string,
+): Promise<ApiNode[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/nodes`,
+    { headers: authHeaders(token) },
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch nodes: ${response.status}`);
   }
   return response.json();
 }
 
-export async function fetchEdges(): Promise<ApiEdge[]> {
-  const response = await fetch(`${API_BASE_URL}/edges`);
+export async function fetchEdges(
+  token: string,
+  questlineId: string,
+): Promise<ApiEdge[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/edges`,
+    { headers: authHeaders(token) },
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch edges: ${response.status}`);
   }
@@ -78,8 +132,14 @@ export interface ValidationReport {
   isValid: boolean;
 }
 
-export async function runValidation(): Promise<ValidationReport> {
-  const response = await fetch(`${API_BASE_URL}/validate`);
+export async function runValidation(
+  token: string,
+  questlineId: string,
+): Promise<ValidationReport> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/validate`,
+    { headers: authHeaders(token) },
+  );
   if (!response.ok) {
     throw new Error(`Failed to run validation: ${response.status}`);
   }
