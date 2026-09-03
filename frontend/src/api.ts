@@ -5,6 +5,8 @@ export interface ApiNode {
   label: string;
   node_type: string;
   properties: Record<string, unknown>;
+  position_x: number;
+  position_y: number;
   created_at: string;
   updated_at: string;
 }
@@ -144,4 +146,22 @@ export async function runValidation(
     throw new Error(`Failed to run validation: ${response.status}`);
   }
   return response.json();
+}
+
+export async function saveNodePositions(
+  token: string,
+  questlineId: string,
+  positions: { id: string; position_x: number; position_y: number }[],
+): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/nodes/positions`,
+    {
+      method: "PUT",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ positions }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("Failed to save layout");
+  }
 }

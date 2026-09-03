@@ -9,11 +9,13 @@ import ReactFlow, {
   useEdgesState,
   type Node,
   type Edge,
+  type NodeChange,
 } from "reactflow";
 import {
   fetchNodes,
   fetchEdges,
   runValidation,
+  saveNodePositions,
   type ApiEdge,
   type ValidationReport,
 } from "./api";
@@ -80,6 +82,8 @@ function App() {
     null,
   );
   const { user, token, logout } = useAuth();
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !selectedQuestlineId) return;
@@ -89,10 +93,10 @@ function App() {
       fetchEdges(token, selectedQuestlineId),
     ])
       .then(([apiNodes, apiEdges]) => {
-        const positionedNodes: Node[] = apiNodes.map((n, index) => ({
+        const positionedNodes: Node[] = apiNodes.map((n) => ({
           id: n.id,
           data: { label: n.label },
-          position: { x: index * 220, y: 100 },
+          position: { x: n.position_x, y: n.position_y },
         }));
 
         const transformedEdges: Edge[] = apiEdges.map((e) => ({
@@ -147,6 +151,33 @@ function App() {
       }
       return updated;
     });
+  }
+
+  function handleNodesChange(changes: NodeChange[]) {
+    onNodesChange(changes);
+    const hasPositionChange = changes.some((c) => c.type === "position");
+    if (hasPositionChange) {
+      setHasUnsavedChanges(true);
+    }
+  }
+
+  async function handleSaveLayout() {
+    if (!token || !selectedQuestlineId) return;
+
+    const positions = flowNodes.map((node) => ({
+      id: node.id,
+      position_x: node.position.x,
+      position_y: node.position.y,
+    }));
+
+    try {
+      await saveNodePositions(token, selectedQuestlineId, positions);
+      setHasUnsavedChanges(false);
+      setSaveStatus("Saved!");
+      setTimeout(() => setSaveStatus(null), 2000);
+    } catch (err) {
+      setSaveStatus("Failed to save");
+    }
   }
 
   async function handleRunValidation() {
@@ -205,6 +236,17 @@ function App() {
           Run Validation
         </button>
         <button
+          style={{
+            marginLeft: 12,
+            fontWeight: hasUnsavedChanges ? "bold" : "normal",
+            background: hasUnsavedChanges ? "#fde047" : undefined,
+          }}
+          onClick={handleSaveLayout}
+        >
+          {hasUnsavedChanges ? "Save*" : "Save"}
+        </button>
+        {saveStatus && <span style={{ marginLeft: 8 }}>{saveStatus}</span>}
+        <button
           style={{ marginLeft: 12 }}
           onClick={() =>
             window.open(
@@ -251,7 +293,7 @@ function App() {
       <ReactFlow
         nodes={flowNodes}
         edges={flowEdges}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         fitView

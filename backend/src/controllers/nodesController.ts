@@ -46,3 +46,44 @@ export async function getDownstreamNodes(req: Request, res: Response) {
     res.status(500).json({ error: "Failed to traverse downstream nodes" });
   }
 }
+
+interface NodePositionUpdate {
+  id: string;
+  position_x: number;
+  position_y: number;
+}
+
+export async function saveNodePositions(req: Request, res: Response) {
+  const { questlineId } = req.params;
+  const updates: NodePositionUpdate[] = req.body.positions;
+
+  if (!Array.isArray(updates) || updates.length === 0) {
+    return res
+      .status(400)
+      .json({ error: "A non-empty positions array is required" });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    for (const update of updates) {
+      await client.query(
+        `UPDATE nodes
+         SET position_x = $1, position_y = $2, updated_at = now()
+         WHERE id = $3 AND questline_id = $4`,
+        [update.position_x, update.position_y, update.id, questlineId],
+      );
+    }
+
+    await client.query("COMMIT");
+    res.json({ saved: updates.length });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error(err);
+    res.status(500).json({ error: "Failed to save node positions" });
+  } finally {
+    client.release();
+  }
+}
