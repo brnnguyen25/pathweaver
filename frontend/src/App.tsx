@@ -11,11 +11,16 @@ import ReactFlow, {
   type Edge,
   type NodeChange,
 } from "reactflow";
+import { NodePropertyPanel } from "./NodePropertyPanel";
 import {
   fetchNodes,
   fetchEdges,
   runValidation,
   saveNodePositions,
+  createNode,
+  updateNode,
+  deleteNode,
+  createEdge,
   type ApiEdge,
   type ValidationReport,
 } from "./api";
@@ -68,8 +73,12 @@ function computeNodeStatus(
 }
 
 function App() {
-  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<Node[]>([]);
-  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
+  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<{
+    label: string;
+  }>([]);
+  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<
+    Record<string, unknown>
+  >([]);
   const [playtestMode, setPlaytestMode] = useState(false);
   const [completedNodeIds, setCompletedNodeIds] = useState<Set<string>>(
     new Set(),
@@ -84,6 +93,7 @@ function App() {
   const { user, token, logout } = useAuth();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !selectedQuestlineId) return;
@@ -140,17 +150,19 @@ function App() {
   }, [playtestMode, completedNodeIds, rawEdges, setFlowNodes]);
 
   function handleNodeClick(_event: React.MouseEvent, node: Node) {
-    if (!playtestMode) return;
-
-    setCompletedNodeIds((current) => {
-      const updated = new Set(current);
-      if (updated.has(node.id)) {
-        updated.delete(node.id);
-      } else {
-        updated.add(node.id);
-      }
-      return updated;
-    });
+    if (playtestMode) {
+      setCompletedNodeIds((current) => {
+        const updated = new Set(current);
+        if (updated.has(node.id)) {
+          updated.delete(node.id);
+        } else {
+          updated.add(node.id);
+        }
+        return updated;
+      });
+    } else {
+      setEditingNodeId(node.id);
+    }
   }
 
   function handleNodesChange(changes: NodeChange[]) {
@@ -180,6 +192,98 @@ function App() {
     }
   }
 
+  async function handleAddNode() {
+    if (!token || !selectedQuestlineId) return;
+    try {
+      const newNode = await createNode(
+        token,
+        selectedQuestlineId,
+        "New Node",
+        300,
+        300,
+      );
+      setFlowNodes((current) => [
+        ...current,
+        {
+          id: newNode.id,
+          data: { label: newNode.label },
+          position: { x: newNode.position_x, y: newNode.position_y },
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleConnect(connection: {
+    source: string | null;
+    target: string | null;
+  }) {
+    if (
+      !token ||
+      !selectedQuestlineId ||
+      !connection.source ||
+      !connection.target
+    )
+      return;
+
+    try {
+      const newEdge = await createEdge(
+        token,
+        selectedQuestlineId,
+        connection.source,
+        connection.target,
+        "hard_requirement",
+      );
+      setFlowEdges((current) => [
+        ...current,
+        {
+          id: newEdge.id,
+          source: newEdge.from_node_id,
+          target: newEdge.to_node_id,
+        },
+      ]);
+      setRawEdges((current) => [...current, newEdge]);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  async function handleSaveNode(updates: {
+    label: string;
+    node_type: string;
+    properties: Record<string, unknown>;
+  }) {
+    if (!token || !selectedQuestlineId || !editingNodeId) return;
+    try {
+      await updateNode(token, selectedQuestlineId, editingNodeId, updates);
+      setFlowNodes((current) =>
+        current.map((n) =>
+          n.id === editingNodeId ? { ...n, data: { label: updates.label } } : n,
+        ),
+      );
+      setEditingNodeId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleDeleteNode() {
+    if (!token || !selectedQuestlineId || !editingNodeId) return;
+    if (!confirm("Delete this node? Connected edges will also be removed."))
+      return;
+    try {
+      await deleteNode(token, selectedQuestlineId, editingNodeId);
+      setFlowNodes((current) => current.filter((n) => n.id !== editingNodeId));
+      setFlowEdges((current) =>
+        current.filter(
+          (e) => e.source !== editingNodeId && e.target !== editingNodeId,
+        ),
+      );
+      setEditingNodeId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  }
   async function handleRunValidation() {
     if (!token || !selectedQuestlineId) return;
     try {
@@ -232,6 +336,9 @@ function App() {
             Reset Playtest
           </button>
         )}
+        <button style={{ marginLeft: 12 }} onClick={handleAddNode}>
+          + Add Node
+        </button>
         <button style={{ marginLeft: 12 }} onClick={handleRunValidation}>
           Run Validation
         </button>
@@ -289,13 +396,26 @@ function App() {
           </div>
         )}
       </div>
-
+      {editingNodeId && (
+        <NodePropertyPanel
+          nodeId={editingNodeId}
+          initialLabel={
+            flowNodes.find((n) => n.id === editingNodeId)?.data.label ?? ""
+          }
+          initialType="required"
+          initialProperties={{}}
+          onSave={handleSaveNode}
+          onDelete={handleDeleteNode}
+          onClose={() => setEditingNodeId(null)}
+        />
+      )}
       <ReactFlow
         nodes={flowNodes}
         edges={flowEdges}
         onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
+        onConnect={handleConnect}
         fitView
       >
         <Background />

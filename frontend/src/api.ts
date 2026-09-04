@@ -165,3 +165,100 @@ export async function saveNodePositions(
     throw new Error("Failed to save layout");
   }
 }
+export async function createNode(
+  token: string,
+  questlineId: string,
+  label: string,
+  positionX: number,
+  positionY: number,
+): Promise<ApiNode> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/nodes`,
+    {
+      method: "POST",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        label,
+        position_x: positionX,
+        position_y: positionY,
+      }),
+    },
+  );
+  if (!response.ok) throw new Error("Failed to create node");
+  return response.json();
+}
+
+export async function updateNode(
+  token: string,
+  questlineId: string,
+  nodeId: string,
+  updates: {
+    label?: string;
+    node_type?: string;
+    properties?: Record<string, unknown>;
+  },
+): Promise<ApiNode> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/nodes/${nodeId}`,
+    {
+      method: "PATCH",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    },
+  );
+  if (!response.ok) throw new Error("Failed to update node");
+  return response.json();
+}
+
+export async function deleteNode(
+  token: string,
+  questlineId: string,
+  nodeId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/nodes/${nodeId}`,
+    {
+      method: "DELETE",
+      headers: authHeaders(token),
+    },
+  );
+  if (!response.ok) throw new Error("Failed to delete node");
+}
+
+export async function createEdge(
+  token: string,
+  questlineId: string,
+  fromNodeId: string,
+  toNodeId: string,
+  conditionType: string,
+): Promise<ApiEdge> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/edges`,
+    {
+      method: "POST",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from_node_id: fromNodeId,
+        to_node_id: toNodeId,
+        condition_type: conditionType,
+      }),
+    },
+  );
+  if (!response.ok) throw new Error("Failed to create edge");
+  return response.json();
+}
+
+export async function deleteEdge(
+  token: string,
+  questlineId: string,
+  edgeId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/questlines/${questlineId}/edges/${edgeId}`,
+    {
+      method: "DELETE",
+      headers: authHeaders(token),
+    },
+  );
+  if (!response.ok) throw new Error("Failed to delete edge");
+}
