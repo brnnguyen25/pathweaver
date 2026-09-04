@@ -3,12 +3,15 @@ import { pool } from "../db";
 import { buildExportSchema, exportSchemaToXml } from "../graph/exportSchema";
 
 export async function exportAsJson(req: Request, res: Response) {
+  const { questlineId } = req.params;
   try {
     const nodesResult = await pool.query(
-      "SELECT id, label, node_type, properties FROM nodes",
+      "SELECT id, label, node_type, properties FROM nodes WHERE questline_id = $1",
+      [questlineId],
     );
     const edgesResult = await pool.query(
-      "SELECT from_node_id, to_node_id, condition_type FROM edges",
+      "SELECT from_node_id, to_node_id, condition_type FROM edges WHERE questline_id = $1",
+      [questlineId],
     );
 
     const schema = buildExportSchema(nodesResult.rows, edgesResult.rows);
@@ -26,12 +29,15 @@ export async function exportAsJson(req: Request, res: Response) {
 }
 
 export async function exportAsXml(req: Request, res: Response) {
+  const { questlineId } = req.params;
   try {
     const nodesResult = await pool.query(
-      "SELECT id, label, node_type, properties FROM nodes",
+      "SELECT id, label, node_type, properties FROM nodes WHERE questline_id = $1",
+      [questlineId],
     );
     const edgesResult = await pool.query(
-      "SELECT from_node_id, to_node_id, condition_type FROM edges",
+      "SELECT from_node_id, to_node_id, condition_type FROM edges WHERE questline_id = $1",
+      [questlineId],
     );
 
     const schema = buildExportSchema(nodesResult.rows, edgesResult.rows);

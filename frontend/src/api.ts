@@ -262,3 +262,21 @@ export async function deleteEdge(
   );
   if (!response.ok) throw new Error("Failed to delete edge");
 }
+export async function importQuestline(
+  token: string,
+  name: string,
+  nodes: unknown[],
+): Promise<{
+  questlineId: string;
+  nodesImported: number;
+  edgesImported: number;
+}> {
+  const response = await fetch(`${API_BASE_URL}/questlines/import`, {
+    method: "POST",
+    headers: { ...authHeaders(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ name, nodes }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Import failed");
+  return data;
+}

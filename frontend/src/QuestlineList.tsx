@@ -4,6 +4,7 @@ import {
   fetchQuestlines,
   createQuestline,
   deleteQuestline,
+  importQuestline,
   type Questline,
 } from "./api";
 
@@ -35,6 +36,40 @@ export function QuestlineList({ onSelect }: QuestlineListProps) {
       setError(
         err instanceof Error ? err.message : "Failed to create questline",
       );
+    }
+  }
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      if (!Array.isArray(parsed.nodes)) {
+        throw new Error(
+          "This file doesn't look like a valid Pathweaver export",
+        );
+      }
+
+      const importName = parsed.questlineName
+        ? `${parsed.questlineName} (Imported)`
+        : "Imported Questline";
+
+      const result = await importQuestline(token, importName, parsed.nodes);
+      setQuestlines((current) => [
+        {
+          id: result.questlineId,
+          name: importName,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        ...current,
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to import file");
+    } finally {
+      e.target.value = ""; // reset so the same file can be re-selected later if needed
     }
   }
 
@@ -79,6 +114,12 @@ export function QuestlineList({ onSelect }: QuestlineListProps) {
         />
         <button type="submit">Create</button>
       </form>
+      <div style={{ marginBottom: 16 }}>
+        <label>
+          Import from file:{" "}
+          <input type="file" accept=".json" onChange={handleImportFile} />
+        </label>
+      </div>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
