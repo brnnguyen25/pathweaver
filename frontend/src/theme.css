@@ -1,0 +1,79 @@
+:root {
+  /* Color */
+  --ink: #14121a;
+  --ink-raised: #1e1b26;
+  --parchment: #ede6d6;
+  --parchment-dim: #e0d8c4;
+  --ember: #c6622a;
+  --ember-bright: #d97a44;
+  --verdigris: #4e7c6b;
+  --threadgold: #b8912f;
+  --charcoal: #2a2420;
+  --danger: #a8433a;
+
+  /* Type */
+  --font-display: "Fraunces", serif;
+  --font-ui: "IBM Plex Sans", sans-serif;
+
+  /* Spacing */
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+
+  /* Motion */
+  --transition-fast: 120ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  background: var(--ink);
+  color: var(--parchment);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+}
+
+button {
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+
+/* Respect motion preferences globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Visible keyboard focus everywhere — never remove this without replacing it */
+:focus-visible {
+  outline: 2px solid var(--ember-bright);
+  outline-offset: 2px;
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.ledger-panel {
+  animation: panel-in 180ms ease-out;
+}

@@ -88,62 +88,126 @@ export function QuestlineList({ onSelect }: QuestlineListProps) {
 
   return (
     <div
-      style={{ maxWidth: 480, margin: "60px auto", fontFamily: "sans-serif" }}
+      style={{
+        minHeight: "100vh",
+        background: "var(--ink)",
+        padding: "60px 24px",
+      }}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h2>My Questlines</h2>
-        <button onClick={logout}>Log Out</button>
-      </div>
-
-      <form
-        onSubmit={handleCreate}
-        style={{ display: "flex", gap: 8, marginBottom: 16 }}
-      >
-        <input
-          type="text"
-          placeholder="New questline name"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          style={{ flex: 1, padding: 8 }}
-        />
-        <button type="submit">Create</button>
-      </form>
-      <div style={{ marginBottom: 16 }}>
-        <label>
-          Import from file:{" "}
-          <input type="file" accept=".json" onChange={handleImportFile} />
-        </label>
-      </div>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {questlines.map((q) => (
-          <li
-            key={q.id}
+      <div style={{ maxWidth: 560, margin: "0 auto" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            marginBottom: 32,
+          }}
+        >
+          <h1 style={{ color: "var(--parchment)", fontSize: 32 }}>
+            Your Campaigns
+          </h1>
+          <button
+            onClick={logout}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "10px 12px",
-              border: "1px solid #ddd",
-              borderRadius: 6,
-              marginBottom: 8,
+              background: "none",
+              border: "none",
+              color: "var(--threadgold)",
+              textDecoration: "underline",
             }}
           >
-            <span style={{ cursor: "pointer" }} onClick={() => onSelect(q.id)}>
-              {q.name}
-            </span>
-            <button onClick={() => handleDelete(q.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+            Log out
+          </button>
+        </div>
+
+        <form
+          onSubmit={handleCreate}
+          style={{ display: "flex", gap: 8, marginBottom: 12 }}
+        >
+          <input
+            type="text"
+            placeholder="Name a new campaign"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            style={{
+              flex: 1,
+              padding: 10,
+              border: "1px solid var(--ink-raised)",
+              borderRadius: 2,
+              background: "var(--ink-raised)",
+              color: "var(--parchment)",
+              fontFamily: "var(--font-ui)",
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: "10px 18px",
+              background: "var(--ember)",
+              color: "var(--parchment)",
+              border: "none",
+              borderRadius: 2,
+            }}
+          >
+            Start
+          </button>
+        </form>
+
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ color: "var(--parchment-dim)", fontSize: 14 }}>
+            Import from file:{" "}
+            <input type="file" accept=".json" onChange={handleImportFile} />
+          </label>
+        </div>
+
+        {error && <p style={{ color: "var(--danger)" }}>{error}</p>}
+
+        {questlines.length === 0 ? (
+          <p style={{ color: "var(--parchment-dim)", fontStyle: "italic" }}>
+            No campaigns yet. Start one above, or import a saved questline.
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            {questlines.map((q) => (
+              <li
+                key={q.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "16px 18px",
+                  background: "var(--parchment)",
+                  borderLeft: "4px solid var(--verdigris)",
+                  marginBottom: 10,
+                  borderRadius: 2,
+                }}
+              >
+                <span
+                  onClick={() => onSelect(q.id)}
+                  style={{
+                    cursor: "pointer",
+                    color: "var(--charcoal)",
+                    fontFamily: "var(--font-display)",
+                    fontSize: 18,
+                  }}
+                >
+                  {q.name}
+                </span>
+                <button
+                  onClick={() => handleDelete(q.id)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--danger)",
+                    fontSize: 13,
+                  }}
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

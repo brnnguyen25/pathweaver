@@ -43,55 +43,110 @@ export function AuthForm() {
 
   return (
     <div
-      style={{ maxWidth: 320, margin: "80px auto", fontFamily: "sans-serif" }}
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--ink)",
+      }}
     >
-      <h2>{mode === "login" ? "Log In" : "Register"}</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 12 }}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ width: "100%", padding: 8 }}
-            required
-          />
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", padding: 8 }}
-            required
-          />
-          {mode === "register" && (
-            <p style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-              At least 8 characters, with an uppercase letter, a number, and a
-              special character.
-            </p>
+      <div
+        style={{
+          width: 340,
+          background: "var(--parchment)",
+          color: "var(--charcoal)",
+          padding: "32px 28px",
+          borderRadius: 2,
+          borderLeft: "4px solid var(--ember)",
+          boxShadow: "0 0 0 1px rgba(0,0,0,0.15)",
+        }}
+      >
+        <h2 style={{ fontSize: 28, marginBottom: 24 }}>
+          {mode === "login" ? "Welcome back" : "Start a new campaign"}
+        </h2>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 14 }}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                border: "1px solid #C9BFA6",
+                borderRadius: 2,
+                background: "#FFFDF8",
+                fontFamily: "var(--font-ui)",
+              }}
+              required
+            />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                border: "1px solid #C9BFA6",
+                borderRadius: 2,
+                background: "#FFFDF8",
+                fontFamily: "var(--font-ui)",
+              }}
+              required
+            />
+            {mode === "register" && (
+              <p style={{ fontSize: 12, color: "#6B6255", marginTop: 6 }}>
+                At least 8 characters, with an uppercase letter, a number, and a
+                special character.
+              </p>
+            )}
+          </div>
+          {error && (
+            <p style={{ color: "var(--danger)", fontSize: 14 }}>{error}</p>
           )}
-        </div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <button type="submit" style={{ width: "100%", padding: 8 }}>
-          {mode === "login" ? "Log In" : "Register"}
-        </button>
-      </form>
-      <p style={{ marginTop: 12 }}>
-        {mode === "login" ? "Need an account?" : "Already have an account?"}{" "}
-        <button
-          onClick={() => setMode(mode === "login" ? "register" : "login")}
-          style={{
-            background: "none",
-            border: "none",
-            color: "blue",
-            cursor: "pointer",
-          }}
-        >
-          {mode === "login" ? "Register" : "Log In"}
-        </button>
-      </p>
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              padding: 11,
+              background: "var(--ember)",
+              color: "var(--parchment)",
+              border: "none",
+              borderRadius: 2,
+              fontWeight: 500,
+              transition: "background var(--transition-fast)",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--ember-bright)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "var(--ember)")
+            }
+          >
+            {mode === "login" ? "Log in" : "Create account"}
+          </button>
+        </form>
+        <p style={{ marginTop: 16, fontSize: 14 }}>
+          {mode === "login" ? "Need an account?" : "Already have one?"}{" "}
+          <button
+            onClick={() => setMode(mode === "login" ? "register" : "login")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--ember)",
+              padding: 0,
+              textDecoration: "underline",
+            }}
+          >
+            {mode === "login" ? "Create one" : "Log in"}
+          </button>
+        </p>
+      </div>
     </div>
   );
 }

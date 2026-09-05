@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { AuthForm } from "./AuthForm";
 import { QuestlineList } from "./QuestlineList";
+import { QuestNode } from "./QuestNode";
 import ReactFlow, {
   Background,
   Controls,
@@ -71,6 +72,17 @@ function computeNodeStatus(
 
   return "missing-prerequisites";
 }
+const nodeTypes = { questNode: QuestNode };
+
+const railButtonStyle: React.CSSProperties = {
+  background: "var(--ink-raised)",
+  color: "var(--parchment)",
+  border: "none",
+  borderRadius: 2,
+  padding: "9px 12px",
+  textAlign: "left",
+  fontSize: 14,
+};
 
 function App() {
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<{
@@ -105,7 +117,8 @@ function App() {
       .then(([apiNodes, apiEdges]) => {
         const positionedNodes: Node[] = apiNodes.map((n) => ({
           id: n.id,
-          data: { label: n.label },
+          type: "questNode",
+          data: { label: n.label, nodeType: n.node_type },
           position: { x: n.position_x, y: n.position_y },
         }));
 
@@ -141,9 +154,9 @@ function App() {
           ...node,
           style: {
             ...node.style,
-            background: statusColors[status],
+            "--node-bg": statusColors[status],
             border: "1px solid #333",
-          },
+          } as React.CSSProperties,
         };
       }),
     );
@@ -206,7 +219,8 @@ function App() {
         ...current,
         {
           id: newNode.id,
-          data: { label: newNode.label },
+          type: "questNode",
+          data: { label: newNode.label, nodeType: newNode.node_type },
           position: { x: newNode.position_x, y: newNode.position_y },
         },
       ]);
@@ -307,54 +321,79 @@ function App() {
   }
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
-      <div
+    <div style={{ display: "flex", height: "100vh", width: "100vw" }}>
+      <aside
         style={{
-          position: "absolute",
-          top: 10,
-          left: 10,
-          zIndex: 10,
-          background: "white",
-          padding: "8px 12px",
-          borderRadius: 6,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+          width: 220,
+          background: "var(--ink)",
+          color: "var(--parchment)",
+          padding: "20px 16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          borderRight: "1px solid var(--ink-raised)",
+          overflowY: "auto",
         }}
       >
-        <label>
+        <h3
+          style={{ color: "var(--parchment)", marginBottom: 8, fontSize: 16 }}
+        >
+          Pathweaver
+        </h3>
+
+        <label
+          style={{
+            fontSize: 14,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
           <input
             type="checkbox"
             checked={playtestMode}
             onChange={(e) => setPlaytestMode(e.target.checked)}
-          />{" "}
+          />
           Playtest Mode
         </label>
         {playtestMode && (
           <button
-            style={{ marginLeft: 12 }}
+            style={railButtonStyle}
             onClick={() => setCompletedNodeIds(new Set())}
           >
             Reset Playtest
           </button>
         )}
-        <button style={{ marginLeft: 12 }} onClick={handleAddNode}>
+
+        <hr style={{ borderColor: "var(--ink-raised)", width: "100%" }} />
+
+        <button style={railButtonStyle} onClick={handleAddNode}>
           + Add Node
         </button>
-        <button style={{ marginLeft: 12 }} onClick={handleRunValidation}>
+        <button style={railButtonStyle} onClick={handleRunValidation}>
           Run Validation
         </button>
         <button
           style={{
-            marginLeft: 12,
-            fontWeight: hasUnsavedChanges ? "bold" : "normal",
-            background: hasUnsavedChanges ? "#fde047" : undefined,
+            ...railButtonStyle,
+            background: hasUnsavedChanges
+              ? "var(--ember)"
+              : "var(--ink-raised)",
           }}
           onClick={handleSaveLayout}
         >
           {hasUnsavedChanges ? "Save*" : "Save"}
         </button>
-        {saveStatus && <span style={{ marginLeft: 8 }}>{saveStatus}</span>}
+        {saveStatus && (
+          <span style={{ fontSize: 12, color: "var(--threadgold)" }}>
+            {saveStatus}
+          </span>
+        )}
+
+        <hr style={{ borderColor: "var(--ink-raised)", width: "100%" }} />
+
         <button
-          style={{ marginLeft: 12 }}
+          style={railButtonStyle}
           onClick={() =>
             window.open(
               `http://localhost:3001/api/questlines/${selectedQuestlineId}/export/json`,
@@ -365,7 +404,7 @@ function App() {
           Export JSON
         </button>
         <button
-          style={{ marginLeft: 12 }}
+          style={railButtonStyle}
           onClick={() =>
             window.open(
               `http://localhost:3001/api/questlines/${selectedQuestlineId}/export/xml`,
@@ -375,52 +414,71 @@ function App() {
         >
           Export XML
         </button>
-        <button
-          style={{ marginLeft: 12 }}
-          onClick={() => setSelectedQuestlineId(null)}
-        >
-          Back to Questlines
-        </button>
-        <button style={{ marginLeft: 12 }} onClick={logout}>
-          Log Out ({user.email})
-        </button>
 
-        {validationReport && (
-          <div style={{ marginTop: 8, fontSize: 14 }}>
-            <strong>
-              {validationReport.isValid ? "✅ Valid" : "❌ Issues found"}
-            </strong>
-            <div>Orphaned: {validationReport.orphanedNodes.length}</div>
-            <div>Dead ends: {validationReport.deadEndNodes.length}</div>
-            <div>Cycles: {validationReport.cycles.length}</div>
-          </div>
+        <div
+          style={{
+            marginTop: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          {validationReport && (
+            <div style={{ fontSize: 13, color: "var(--parchment-dim)" }}>
+              <strong
+                style={{
+                  color: validationReport.isValid
+                    ? "var(--verdigris)"
+                    : "var(--danger)",
+                }}
+              >
+                {validationReport.isValid ? "Valid" : "Issues found"}
+              </strong>
+              <div>Orphaned: {validationReport.orphanedNodes.length}</div>
+              <div>Dead ends: {validationReport.deadEndNodes.length}</div>
+              <div>Cycles: {validationReport.cycles.length}</div>
+            </div>
+          )}
+          <button
+            style={railButtonStyle}
+            onClick={() => setSelectedQuestlineId(null)}
+          >
+            Back to Campaigns
+          </button>
+          <button style={railButtonStyle} onClick={logout}>
+            Log Out
+          </button>
+        </div>
+      </aside>
+
+      <div style={{ flex: 1, position: "relative" }}>
+        {editingNodeId && (
+          <NodePropertyPanel
+            nodeId={editingNodeId}
+            initialLabel={
+              flowNodes.find((n) => n.id === editingNodeId)?.data.label ?? ""
+            }
+            initialType="required"
+            initialProperties={{}}
+            onSave={handleSaveNode}
+            onDelete={handleDeleteNode}
+            onClose={() => setEditingNodeId(null)}
+          />
         )}
+        <ReactFlow
+          nodes={flowNodes}
+          edges={flowEdges}
+          nodeTypes={nodeTypes}
+          onNodesChange={handleNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={handleNodeClick}
+          onConnect={handleConnect}
+          fitView
+        >
+          <Background color="var(--ink-raised)" gap={24} />
+          <Controls />
+        </ReactFlow>
       </div>
-      {editingNodeId && (
-        <NodePropertyPanel
-          nodeId={editingNodeId}
-          initialLabel={
-            flowNodes.find((n) => n.id === editingNodeId)?.data.label ?? ""
-          }
-          initialType="required"
-          initialProperties={{}}
-          onSave={handleSaveNode}
-          onDelete={handleDeleteNode}
-          onClose={() => setEditingNodeId(null)}
-        />
-      )}
-      <ReactFlow
-        nodes={flowNodes}
-        edges={flowEdges}
-        onNodesChange={handleNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        onConnect={handleConnect}
-        fitView
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
     </div>
   );
 }
