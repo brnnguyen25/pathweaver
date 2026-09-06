@@ -26,6 +26,9 @@ import {
   type ValidationReport,
 } from "./api";
 
+const API_ROOT =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+
 type NodeStatus =
   | "completed"
   | "available"
@@ -396,7 +399,7 @@ function App() {
           style={railButtonStyle}
           onClick={() =>
             window.open(
-              `http://localhost:3001/api/questlines/${selectedQuestlineId}/export/json`,
+              `${API_ROOT}/questlines/${selectedQuestlineId}/export/json`,
               "_blank",
             )
           }
@@ -407,7 +410,7 @@ function App() {
           style={railButtonStyle}
           onClick={() =>
             window.open(
-              `http://localhost:3001/api/questlines/${selectedQuestlineId}/export/xml`,
+              `${API_ROOT}/questlines/${selectedQuestlineId}/export/xml`,
               "_blank",
             )
           }
